@@ -5,6 +5,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.Toast;
@@ -63,6 +65,28 @@ public class MainActivity extends AppCompatActivity implements IMainActivityView
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        switch (id) {
+            case R.id.action_a_z:
+                mPresenter.sortByAZ();
+                return true;
+            case R.id.action_z_a:
+                mPresenter.sortByZA();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
     protected void onStop() {
         super.onStop();
         if(mPresenter != null){
@@ -83,6 +107,11 @@ public class MainActivity extends AppCompatActivity implements IMainActivityView
     @Override
     public void showError(int resourceId) {
         Toast.makeText(getApplicationContext(), getApplicationContext().getString(resourceId), Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void showInfoMessage(String text) {
+        Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
     }
 
     @Override

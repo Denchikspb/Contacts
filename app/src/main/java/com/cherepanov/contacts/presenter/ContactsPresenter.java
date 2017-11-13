@@ -14,6 +14,8 @@ import com.cherepanov.contacts.model.repo.service.ModelImpl;
 import com.cherepanov.contacts.view.contactList.IMainActivityView;
 import com.cherepanov.contacts.view.detailContact.DetailContactActivity;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import rx.Observer;
@@ -29,12 +31,16 @@ public class ContactsPresenter implements IContactsPresenter {
     private IModel mModel = new ModelImpl();
     private IMainActivityView mMainActivityView;
     private Subscription mSubscription = Subscriptions.empty();
+    private List<Contact> mCurrentContactList;
 
     public ContactsPresenter(IMainActivityView mainActivityView, Context context) {
         mMainActivityView = mainActivityView;
         mDBHelper = ContactsDBHelper.getInstance(context);
     }
 
+    /**
+     *  start load list contacts from internet or db
+     */
     @Override
     public void onStartLoad() {
         mMainActivityView.showLoading();
@@ -53,6 +59,7 @@ public class ContactsPresenter implements IContactsPresenter {
                     public void onError(Throwable e) {
                         Log.d(LOG_TAG, e.getMessage());
                         mMainActivityView.showError(R.string.no_internet_connection);
+                        mCurrentContactList = getContactsFromCache();
                         mMainActivityView.showData(getContactsFromCache());
                     }
 
@@ -63,6 +70,7 @@ public class ContactsPresenter implements IContactsPresenter {
                             Log.i("TestTAG", c.getName());
                             ContactsDBTable.addContact(c, mDBHelper);
                         }
+                        mCurrentContactList = contacts;
                         if (!contacts.isEmpty()) {
                             mMainActivityView.showData(contacts);
                         } else {
@@ -72,6 +80,9 @@ public class ContactsPresenter implements IContactsPresenter {
                 });
     }
 
+    /**
+     *  stop load and unsubscribe
+     */
     @Override
     public void onStop() {
         if (!mSubscription.isUnsubscribed()) {
@@ -79,6 +90,12 @@ public class ContactsPresenter implements IContactsPresenter {
         }
     }
 
+    /**
+     *  show detail contact activity
+     *
+     * @param contact - contact pojo
+     * @param context - context
+     */
     @Override
     public void showDetailContact(Contact contact, Context context) {
         Intent intent = new Intent(context, DetailContactActivity.class);
@@ -93,10 +110,55 @@ public class ContactsPresenter implements IContactsPresenter {
         context.startActivity(intent);
     }
 
+    /**
+     * sort by a-z
+     */
+    @Override
+    public void sortByAZ() {
+        mMainActivityView.showInfoMessage("sort A-Z");
+        if (mCurrentContactList != null){
+            Collections.sort(mCurrentContactList, new Comparator<Contact>() {
+                @Override
+                public int compare(Contact contact, Contact t1) {
+                    return contact.getUsername().compareTo(t1.getUsername());
+                }
+            });
+        }
+        mMainActivityView.showData(mCurrentContactList);
+    }
+
+    /**
+     * sort by z-a
+     */
+    @Override
+    public void sortByZA() {
+        mMainActivityView.showInfoMessage("sort Z-A");
+        if (mCurrentContactList != null){
+            Collections.sort(mCurrentContactList, new Comparator<Contact>() {
+                @Override
+                public int compare(Contact contact, Contact t1) {
+                    return t1.getUsername().compareTo(contact.getUsername());
+                }
+            });
+        }
+        mMainActivityView.showData(mCurrentContactList);
+    }
+
+    /**
+     *  get contact list from db
+     *
+     * @return contact list
+     */
     private List<Contact> getContactsFromCache() {
         return ContactsDBTable.getContactList(mDBHelper);
     }
 
+    /**
+     *  make address text
+     *
+     * @param contact - contact
+     * @return - address
+     */
     private String getAddress(Contact contact) {
         return contact.getAddress().getSuite()
                 + ", " + contact.getAddress().getStreet()
@@ -104,6 +166,12 @@ public class ContactsPresenter implements IContactsPresenter {
                 + ", " + contact.getAddress().getZipcode();
     }
 
+    /**
+     * make company description text
+     *
+     * @param contact - contact
+     * @return - company description
+     */
     private String getCompany(Contact contact) {
         return contact.getCompany().getName()
                 + "\n" + contact.getCompany().getCatchPhrase()

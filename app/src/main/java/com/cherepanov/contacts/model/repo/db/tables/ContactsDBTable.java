@@ -58,7 +58,12 @@ public class ContactsDBTable {
 
     public static final String DROP_CONTACT_TABLE = "drop table if exists" + TABLE_NAME;
 
-
+    /**
+     *  add new contact to table
+     *
+     * @param contact - current contact
+     * @param helper - db-helper
+     */
     public static void addContact(Contact contact, ContactsDBHelper helper) {
         SQLiteDatabase db = helper.getWritableDatabase();
 
@@ -88,6 +93,12 @@ public class ContactsDBTable {
         db.close();
     }
 
+    /**
+     *  get all contact list from db
+     *
+     * @param helper - db-helper
+     * @return contact list
+     */
     public static List<Contact> getContactList(ContactsDBHelper helper) {
         List<Contact> contacts = new ArrayList<>();
         SQLiteDatabase db = helper.getReadableDatabase();
@@ -109,11 +120,22 @@ public class ContactsDBTable {
         return contacts;
     }
 
+    /**
+     *  clear all contacts
+     *
+     * @param dbHelper - db-helper
+     */
     public static void clearTable(ContactsDBHelper dbHelper){
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         db.execSQL("delete from " + TABLE_NAME);
     }
 
+    /**
+     *  mapper from cursor to contact pojo
+     *
+     * @param cursor - cursor from db
+     * @return - contact pojo
+     */
     private static Contact getContact(Cursor cursor) {
         Contact contact = new Contact();
         contact.setId(cursor.getString(cursor.getColumnIndex(ID)));

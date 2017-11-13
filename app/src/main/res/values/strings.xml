@@ -12,4 +12,7 @@
     <string name="no_internet_connection">No internet connection</string>
     <string name="no_data">No data</string>
 
+    <string name="menu_sort_a_z">Sort By A-Z</string>
+    <string name="menu_sort_z_a">Sort By Z-A</string>
+
 </resources>

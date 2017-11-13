@@ -15,4 +15,6 @@ public interface IContactsPresenter {
 
     void showDetailContact(Contact contact, Context context);
 
+    void sortByAZ();
+    void sortByZA();
 }
