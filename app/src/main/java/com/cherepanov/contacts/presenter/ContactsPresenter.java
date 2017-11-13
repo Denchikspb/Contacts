@@ -39,7 +39,7 @@ public class ContactsPresenter implements IContactsPresenter {
     }
 
     /**
-     *  start load list contacts from internet or db
+     * start load list contacts from internet or db
      */
     @Override
     public void onStartLoad() {
@@ -59,8 +59,7 @@ public class ContactsPresenter implements IContactsPresenter {
                     public void onError(Throwable e) {
                         Log.d(LOG_TAG, e.getMessage());
                         mMainActivityView.showError(R.string.no_internet_connection);
-                        mCurrentContactList = getContactsFromCache();
-                        mMainActivityView.showData(getContactsFromCache());
+                        getContactsFromCache();
                     }
 
                     @Override
@@ -81,7 +80,7 @@ public class ContactsPresenter implements IContactsPresenter {
     }
 
     /**
-     *  stop load and unsubscribe
+     * stop load and unsubscribe
      */
     @Override
     public void onStop() {
@@ -91,7 +90,7 @@ public class ContactsPresenter implements IContactsPresenter {
     }
 
     /**
-     *  show detail contact activity
+     * show detail contact activity
      *
      * @param contact - contact pojo
      * @param context - context
@@ -115,16 +114,18 @@ public class ContactsPresenter implements IContactsPresenter {
      */
     @Override
     public void sortByAZ() {
-        mMainActivityView.showInfoMessage("sort A-Z");
-        if (mCurrentContactList != null){
+        if (mCurrentContactList != null && !mCurrentContactList.isEmpty()) {
             Collections.sort(mCurrentContactList, new Comparator<Contact>() {
                 @Override
                 public int compare(Contact contact, Contact t1) {
                     return contact.getUsername().compareTo(t1.getUsername());
                 }
             });
+            mMainActivityView.showInfoMessage("sort A-Z");
+            mMainActivityView.showData(mCurrentContactList);
+        } else {
+            mMainActivityView.showError(R.string.no_data);
         }
-        mMainActivityView.showData(mCurrentContactList);
     }
 
     /**
@@ -132,29 +133,36 @@ public class ContactsPresenter implements IContactsPresenter {
      */
     @Override
     public void sortByZA() {
-        mMainActivityView.showInfoMessage("sort Z-A");
-        if (mCurrentContactList != null){
+        if (mCurrentContactList != null && !mCurrentContactList.isEmpty()) {
             Collections.sort(mCurrentContactList, new Comparator<Contact>() {
                 @Override
                 public int compare(Contact contact, Contact t1) {
                     return t1.getUsername().compareTo(contact.getUsername());
                 }
             });
+            mMainActivityView.showInfoMessage("sort Z-A");
+            mMainActivityView.showData(mCurrentContactList);
+        } else {
+            mMainActivityView.showError(R.string.no_data);
+        }
+    }
+
+    /**
+     * get contact list from db
+     */
+    @Override
+    public void getContactsFromCache() {
+        mMainActivityView.showLoading();
+        mCurrentContactList = ContactsDBTable.getContactList(mDBHelper);
+        mMainActivityView.hideLoading();
+        if (mCurrentContactList.isEmpty()) {
+            mMainActivityView.showError(R.string.no_data);
         }
         mMainActivityView.showData(mCurrentContactList);
     }
 
     /**
-     *  get contact list from db
-     *
-     * @return contact list
-     */
-    private List<Contact> getContactsFromCache() {
-        return ContactsDBTable.getContactList(mDBHelper);
-    }
-
-    /**
-     *  make address text
+     * make address text
      *
      * @param contact - contact
      * @return - address

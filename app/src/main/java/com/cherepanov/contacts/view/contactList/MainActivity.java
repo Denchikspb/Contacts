@@ -12,6 +12,7 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.cherepanov.contacts.R;
+import com.cherepanov.contacts.helper.NetworkUtils;
 import com.cherepanov.contacts.model.entity.Contact;
 import com.cherepanov.contacts.presenter.ContactsPresenter;
 import com.cherepanov.contacts.presenter.IContactsPresenter;
@@ -61,7 +62,11 @@ public class MainActivity extends AppCompatActivity implements IMainActivityView
         });
         mRecyclerView.setAdapter(mAdapter);
 
-        mPresenter.onStartLoad();
+        if (NetworkUtils.isNetAvailable(getApplicationContext())){
+            mPresenter.onStartLoad();
+        } else {
+            mPresenter.getContactsFromCache();
+        }
     }
 
     @Override
