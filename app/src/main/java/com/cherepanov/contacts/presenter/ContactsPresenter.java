@@ -118,7 +118,7 @@ public class ContactsPresenter implements IContactsPresenter {
             Collections.sort(mCurrentContactList, new Comparator<Contact>() {
                 @Override
                 public int compare(Contact contact, Contact t1) {
-                    return contact.getUsername().compareTo(t1.getUsername());
+                    return contact.getName().compareTo(t1.getName());
                 }
             });
             mMainActivityView.showInfoMessage("sort A-Z");
@@ -137,7 +137,7 @@ public class ContactsPresenter implements IContactsPresenter {
             Collections.sort(mCurrentContactList, new Comparator<Contact>() {
                 @Override
                 public int compare(Contact contact, Contact t1) {
-                    return t1.getUsername().compareTo(contact.getUsername());
+                    return t1.getName().compareTo(contact.getName());
                 }
             });
             mMainActivityView.showInfoMessage("sort Z-A");
