@@ -11,7 +11,16 @@ public class ContactsDBHelper extends SQLiteOpenHelper {
     private static final int VERSION = 1;
     private static final String DATABASE_NAME = "contacts.db";
 
-    public ContactsDBHelper(Context context) {
+    private static ContactsDBHelper sDBHelper;
+
+    public static ContactsDBHelper getInstance(Context context) {
+        if (sDBHelper == null) {
+            sDBHelper = new ContactsDBHelper(context);
+        }
+        return sDBHelper;
+    }
+
+    private ContactsDBHelper(Context context) {
         super(context, DATABASE_NAME, null, VERSION);
     }
 

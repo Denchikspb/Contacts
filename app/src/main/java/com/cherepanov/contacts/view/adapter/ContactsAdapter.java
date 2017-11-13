@@ -1,6 +1,5 @@
-package com.cherepanov.contacts.view.adapters;
+package com.cherepanov.contacts.view.adapter;
 
-import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,8 +8,6 @@ import android.widget.TextView;
 
 import com.cherepanov.contacts.R;
 import com.cherepanov.contacts.model.entity.Contact;
-import com.cherepanov.contacts.view.contactList.IMainActivityView;
-import com.cherepanov.contacts.view.detailContact.DetailContactActivity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,9 +15,18 @@ import java.util.List;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
-public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
+public class ContactsAdapter extends RecyclerView.Adapter<ContactsAdapter.ViewHolder> {
 
+    public interface ContactListAdapterListener {
+        void onContactClick(Contact contactItem);
+    }
+
+    private ContactListAdapterListener mListener;
     private List<Contact> mContactList = new ArrayList<>();
+
+    public void setListener(ContactListAdapterListener listener) {
+        mListener = listener;
+    }
 
     public void setContactList(List<Contact> list) {
         this.mContactList = list;
@@ -38,7 +44,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         Contact contact = mContactList.get(position);
         holder.mUsername.setText(contact.getName());
         holder.mEmail.setText(contact.getEmail());
-        holder.id = contact.getId();
     }
 
     @Override
@@ -46,15 +51,13 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         return mContactList == null ? 0 : mContactList.size();
     }
 
-    static class ViewHolder extends RecyclerView.ViewHolder {
+    class ViewHolder extends RecyclerView.ViewHolder {
 
         @Bind(R.id.username_tv)
         TextView mUsername;
 
         @Bind(R.id.email_tv)
         TextView mEmail;
-
-        private String id;
 
         ViewHolder(final View itemView) {
             super(itemView);
@@ -63,9 +66,10 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    Intent intent = new Intent(itemView.getContext(), DetailContactActivity.class);
-                    intent.putExtra("ID", id);
-                    itemView.getContext().startActivity(intent);
+                    if (mListener != null) {
+                        int position = getAdapterPosition();
+                        mListener.onContactClick(mContactList.get(position));
+                    }
                 }
             });
         }

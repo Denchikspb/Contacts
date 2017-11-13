@@ -1,20 +1,24 @@
 package com.cherepanov.contacts.view.detailContact;
 
-import android.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.MenuItem;
 import android.widget.TextView;
 
 import com.cherepanov.contacts.R;
-import com.cherepanov.contacts.model.entity.Contact;
-import com.cherepanov.contacts.model.repo.db.tables.ContactsDBTable;
-import com.cherepanov.contacts.presenter.ContactsPresenter;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
 public class DetailContactActivity extends AppCompatActivity {
+
+    public static final String NAME = "name";
+    public static final String USERNAME = "username";
+    public static final String PHONE = "phone";
+    public static final String ADDRESS = "address";
+    public static final String WEBSITE = "website";
+    public static final String COMPANY = "company";
 
     @Bind(R.id.detail_toolbar)
     Toolbar mToolbar;
@@ -42,23 +46,42 @@ public class DetailContactActivity extends AppCompatActivity {
         setSupportActionBar(mToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        String id = "";
+        String name = "";
         if (getIntent() != null) {
-            id = getIntent().getStringExtra("ID");
+            name = getIntent().getStringExtra(NAME);
         }
-        Contact contact = ContactsDBTable.getContactById(id, ContactsPresenter.mDBHelper);
-        mUsername.setText(contact.getUsername());
-        mPhone.setText(contact.getPhone());
-        mAddress.setText("" + contact.getAddress().getSuite()
-                + ", " + contact.getAddress().getStreet()
-                + ", " + contact.getAddress().getCity()
-                + ", " + contact.getAddress().getZipcode());
-
-        mWebsite.setText(contact.getWebsite());
-
-        mCompany.setText("" + contact.getCompany().getName()
-                + "\n" + contact.getCompany().getCatchPhrase()
-                + "\n" + contact.getCompany().getBs());
-
+        getSupportActionBar().setTitle(name);
+        setData();
     }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                onBackPressed();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void setData() {
+        String username = "";
+        String phone = "";
+        String address = "";
+        String website = "";
+        String company = "";
+        if (getIntent() != null) {
+            username = getIntent().getStringExtra(USERNAME);
+            phone = getIntent().getStringExtra(PHONE);
+            address = getIntent().getStringExtra(ADDRESS);
+            website = getIntent().getStringExtra(WEBSITE);
+            company = getIntent().getStringExtra(COMPANY);
+        }
+        mUsername.setText(username);
+        mPhone.setText(phone);
+        mAddress.setText(address);
+        mWebsite.setText(website);
+        mCompany.setText(company);
+    }
+
 }

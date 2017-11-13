@@ -13,7 +13,7 @@ public interface IMainActivityView {
     void showLoading();
     void hideLoading();
 
-    void showError(String error);
+    void showError(int resourceId);
 
     void showData(List<Contact> list);
 }

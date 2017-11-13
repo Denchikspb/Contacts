@@ -4,7 +4,6 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import com.cherepanov.contacts.model.entity.Address;
@@ -110,26 +109,6 @@ public class ContactsDBTable {
         return contacts;
     }
 
-    public static Contact getContactById(String id, ContactsDBHelper helper) {
-        Contact contact = null;
-        SQLiteDatabase db = helper.getReadableDatabase();
-        try {
-            Cursor cursor = db.query(TABLE_NAME, null, "ID = ?", new String[]{id}, null, null, null);
-            if (cursor != null) {
-                if (cursor.getCount() > 0) {
-                    if (cursor.moveToFirst()) {
-                        cursor.moveToNext();
-                        contact = getContact(cursor);
-                    }
-                }
-                cursor.close();
-            }
-        } catch (SQLException e) {
-            Log.d(LOG_TAG, e.getMessage());
-        }
-        return contact;
-    }
-
     public static void clearTable(ContactsDBHelper dbHelper){
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         db.execSQL("delete from " + TABLE_NAME);
@@ -165,6 +144,4 @@ public class ContactsDBTable {
 
         return contact;
     }
-
-
 }

@@ -9,12 +9,11 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import com.arellomobile.mvp.presenter.InjectPresenter;
 import com.cherepanov.contacts.R;
 import com.cherepanov.contacts.model.entity.Contact;
 import com.cherepanov.contacts.presenter.ContactsPresenter;
 import com.cherepanov.contacts.presenter.IContactsPresenter;
-import com.cherepanov.contacts.view.adapters.RecyclerViewAdapter;
+import com.cherepanov.contacts.view.adapter.ContactsAdapter;
 
 import java.util.List;
 
@@ -32,7 +31,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityView
     @Bind(R.id.toolbar)
     Toolbar toolbar;
 
-    private RecyclerViewAdapter mAdapter;
+    private ContactsAdapter mAdapter;
 
 //    @InjectPresenter
     IContactsPresenter mPresenter;
@@ -49,7 +48,15 @@ public class MainActivity extends AppCompatActivity implements IMainActivityView
         }
 
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
-        mAdapter = new RecyclerViewAdapter();
+        mAdapter = new ContactsAdapter();
+        mAdapter.setListener(new ContactsAdapter.ContactListAdapterListener() {
+            @Override
+            public void onContactClick(Contact contactItem) {
+                if (mPresenter != null){
+                    mPresenter.showDetailContact(contactItem, getApplicationContext());
+                }
+            }
+        });
         mRecyclerView.setAdapter(mAdapter);
 
         mPresenter.onStartLoad();
@@ -74,8 +81,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityView
     }
 
     @Override
-    public void showError(String error) {
-        Toast.makeText(getApplicationContext(), error, Toast.LENGTH_SHORT).show();
+    public void showError(int resourceId) {
+        Toast.makeText(getApplicationContext(), getApplicationContext().getString(resourceId), Toast.LENGTH_SHORT).show();
     }
 
     @Override
