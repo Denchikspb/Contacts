@@ -1,7 +1,7 @@
 package com.cherepanov.contacts.view.contactList;
 
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
+import android.support.annotation.NonNull;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -15,15 +15,15 @@ import com.cherepanov.contacts.R;
 import com.cherepanov.contacts.helper.NetworkUtils;
 import com.cherepanov.contacts.model.entity.Contact;
 import com.cherepanov.contacts.presenter.ContactsPresenter;
-import com.cherepanov.contacts.presenter.IContactsPresenter;
 import com.cherepanov.contacts.view.adapter.ContactsAdapter;
+import com.hannesdorfmann.mosby3.mvp.MvpActivity;
 
 import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
-public class MainActivity extends AppCompatActivity implements IMainActivityView {
+public class MainActivity extends MvpActivity<IMainActivityView, ContactsPresenter> implements IMainActivityView {
 
     @Bind(R.id.progress_layout)
     LinearLayout mProgressLayout;
@@ -36,9 +36,6 @@ public class MainActivity extends AppCompatActivity implements IMainActivityView
 
     private ContactsAdapter mAdapter;
 
-//    @InjectPresenter
-    IContactsPresenter mPresenter;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,26 +43,20 @@ public class MainActivity extends AppCompatActivity implements IMainActivityView
         ButterKnife.bind(this);
         setSupportActionBar(toolbar);
 
-        if (mPresenter == null){
-            mPresenter = new ContactsPresenter(this, getApplicationContext());
-        }
-
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
         mAdapter = new ContactsAdapter();
         mAdapter.setListener(new ContactsAdapter.ContactListAdapterListener() {
             @Override
             public void onContactClick(Contact contactItem) {
-                if (mPresenter != null){
-                    mPresenter.showDetailContact(contactItem, getApplicationContext());
-                }
+                getPresenter().showDetailContact(contactItem, getApplicationContext());
             }
         });
         mRecyclerView.setAdapter(mAdapter);
 
-        if (NetworkUtils.isNetAvailable(getApplicationContext())){
-            mPresenter.onStartLoad();
+        if (NetworkUtils.isNetAvailable(getApplicationContext())) {
+            getPresenter().onStartLoad();
         } else {
-            mPresenter.getContactsFromCache();
+            getPresenter().getContactsFromCache();
         }
     }
 
@@ -81,10 +72,10 @@ public class MainActivity extends AppCompatActivity implements IMainActivityView
 
         switch (id) {
             case R.id.action_a_z:
-                mPresenter.sortByAZ();
+                getPresenter().sortByAZ();
                 return true;
             case R.id.action_z_a:
-                mPresenter.sortByZA();
+                getPresenter().sortByZA();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -94,9 +85,13 @@ public class MainActivity extends AppCompatActivity implements IMainActivityView
     @Override
     protected void onStop() {
         super.onStop();
-        if(mPresenter != null){
-            mPresenter.onStop();
-        }
+        getPresenter().onStop();
+    }
+
+    @NonNull
+    @Override
+    public ContactsPresenter createPresenter() {
+        return new ContactsPresenter(getApplicationContext());
     }
 
     @Override

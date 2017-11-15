@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
-import com.arellomobile.mvp.InjectViewState;
 import com.cherepanov.contacts.R;
 import com.cherepanov.contacts.model.entity.Contact;
 import com.cherepanov.contacts.model.repo.db.ContactsDBHelper;
@@ -13,6 +12,7 @@ import com.cherepanov.contacts.model.repo.service.IModel;
 import com.cherepanov.contacts.model.repo.service.ModelImpl;
 import com.cherepanov.contacts.view.contactList.IMainActivityView;
 import com.cherepanov.contacts.view.detailContact.DetailContactActivity;
+import com.hannesdorfmann.mosby3.mvp.MvpBasePresenter;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -22,67 +22,69 @@ import rx.Observer;
 import rx.Subscription;
 import rx.subscriptions.Subscriptions;
 
-//@InjectViewState
-public class ContactsPresenter implements IContactsPresenter {
+public class ContactsPresenter extends MvpBasePresenter<IMainActivityView> {
 
     private static final String LOG_TAG = ContactsPresenter.class.getSimpleName();
     private ContactsDBHelper mDBHelper;
 
     private IModel mModel = new ModelImpl();
-    private IMainActivityView mMainActivityView;
     private Subscription mSubscription = Subscriptions.empty();
     private List<Contact> mCurrentContactList;
 
-    public ContactsPresenter(IMainActivityView mainActivityView, Context context) {
-        mMainActivityView = mainActivityView;
+    public ContactsPresenter(Context context) {
         mDBHelper = ContactsDBHelper.getInstance(context);
     }
 
     /**
      * start load list contacts from internet or db
      */
-    @Override
     public void onStartLoad() {
-        mMainActivityView.showLoading();
         if (!mSubscription.isUnsubscribed()) {
             mSubscription.unsubscribe();
         }
 
-        mSubscription = mModel.getUserContacts()
-                .subscribe(new Observer<List<Contact>>() {
-                    @Override
-                    public void onCompleted() {
-                        mMainActivityView.hideLoading();
-                    }
+        if (isViewAttached()) {
+            getView().showLoading();
+            if (mCurrentContactList != null && !mCurrentContactList.isEmpty()){
+                getView().hideLoading();
+                getView().showData(mCurrentContactList);
+            } else {
+                mSubscription = mModel.getUserContacts()
+                        .subscribe(new Observer<List<Contact>>() {
+                            @Override
+                            public void onCompleted() {
+                                getView().hideLoading();
+                            }
 
-                    @Override
-                    public void onError(Throwable e) {
-                        Log.d(LOG_TAG, e.getMessage());
-                        mMainActivityView.showError(R.string.no_internet_connection);
-                        getContactsFromCache();
-                    }
+                            @Override
+                            public void onError(Throwable e) {
+                                Log.d(LOG_TAG, e.getMessage());
+                                getView().showError(R.string.no_internet_connection);
+                                getContactsFromCache();
+                            }
 
-                    @Override
-                    public void onNext(List<Contact> contacts) {
-                        ContactsDBTable.clearTable(mDBHelper);
-                        for (Contact c : contacts) {
-                            Log.i("TestTAG", c.getName());
-                            ContactsDBTable.addContact(c, mDBHelper);
-                        }
-                        mCurrentContactList = contacts;
-                        if (!contacts.isEmpty()) {
-                            mMainActivityView.showData(contacts);
-                        } else {
-                            mMainActivityView.showError(R.string.no_data);
-                        }
-                    }
-                });
+                            @Override
+                            public void onNext(List<Contact> contacts) {
+                                ContactsDBTable.clearTable(mDBHelper);
+                                for (Contact c : contacts) {
+                                    Log.i("TestTAG", c.getName());
+                                    ContactsDBTable.addContact(c, mDBHelper);
+                                }
+                                mCurrentContactList = contacts;
+                                if (!contacts.isEmpty()) {
+                                    getView().showData(contacts);
+                                } else {
+                                    getView().showError(R.string.no_data);
+                                }
+                            }
+                        });
+            }
+        }
     }
 
     /**
      * stop load and unsubscribe
      */
-    @Override
     public void onStop() {
         if (!mSubscription.isUnsubscribed()) {
             mSubscription.unsubscribe();
@@ -95,7 +97,6 @@ public class ContactsPresenter implements IContactsPresenter {
      * @param contact - contact pojo
      * @param context - context
      */
-    @Override
     public void showDetailContact(Contact contact, Context context) {
         Intent intent = new Intent(context, DetailContactActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -112,53 +113,56 @@ public class ContactsPresenter implements IContactsPresenter {
     /**
      * sort by a-z
      */
-    @Override
     public void sortByAZ() {
-        if (mCurrentContactList != null && !mCurrentContactList.isEmpty()) {
-            Collections.sort(mCurrentContactList, new Comparator<Contact>() {
-                @Override
-                public int compare(Contact contact, Contact t1) {
-                    return contact.getName().compareTo(t1.getName());
-                }
-            });
-            mMainActivityView.showInfoMessage("sort A-Z");
-            mMainActivityView.showData(mCurrentContactList);
-        } else {
-            mMainActivityView.showError(R.string.no_data);
+        if(isViewAttached()) {
+            if (mCurrentContactList != null && !mCurrentContactList.isEmpty()) {
+                Collections.sort(mCurrentContactList, new Comparator<Contact>() {
+                    @Override
+                    public int compare(Contact contact, Contact t1) {
+                        return contact.getName().compareTo(t1.getName());
+                    }
+                });
+                getView().showInfoMessage("sort A-Z");
+                getView().showData(mCurrentContactList);
+            } else {
+                getView().showError(R.string.no_data);
+            }
         }
     }
 
     /**
      * sort by z-a
      */
-    @Override
     public void sortByZA() {
-        if (mCurrentContactList != null && !mCurrentContactList.isEmpty()) {
-            Collections.sort(mCurrentContactList, new Comparator<Contact>() {
-                @Override
-                public int compare(Contact contact, Contact t1) {
-                    return t1.getName().compareTo(contact.getName());
-                }
-            });
-            mMainActivityView.showInfoMessage("sort Z-A");
-            mMainActivityView.showData(mCurrentContactList);
-        } else {
-            mMainActivityView.showError(R.string.no_data);
+        if(isViewAttached()) {
+            if (mCurrentContactList != null && !mCurrentContactList.isEmpty()) {
+                Collections.sort(mCurrentContactList, new Comparator<Contact>() {
+                    @Override
+                    public int compare(Contact contact, Contact t1) {
+                        return t1.getName().compareTo(contact.getName());
+                    }
+                });
+                getView().showInfoMessage("sort Z-A");
+                getView().showData(mCurrentContactList);
+            } else {
+                getView().showError(R.string.no_data);
+            }
         }
     }
 
     /**
      * get contact list from db
      */
-    @Override
     public void getContactsFromCache() {
-        mMainActivityView.showLoading();
-        mCurrentContactList = ContactsDBTable.getContactList(mDBHelper);
-        mMainActivityView.hideLoading();
-        if (mCurrentContactList.isEmpty()) {
-            mMainActivityView.showError(R.string.no_data);
+        if (isViewAttached()) {
+            getView().showLoading();
+            mCurrentContactList = ContactsDBTable.getContactList(mDBHelper);
+            getView().hideLoading();
+            if (mCurrentContactList.isEmpty()) {
+                getView().showError(R.string.no_data);
+            }
+            getView().showData(mCurrentContactList);
         }
-        mMainActivityView.showData(mCurrentContactList);
     }
 
     /**
